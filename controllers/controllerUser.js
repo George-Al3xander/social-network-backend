@@ -46,9 +46,9 @@ const user_login = async (req, res) => {
         delete user.password
            try {
                 if(await bcrypt.compare(req.body.password, user.password)) {
-                    jwt.sign({user}, process.env.SECRET_KEY, (err, token) => {
-                        res.json({user,token})
-                    });
+                    
+                        res.json(user)
+                    
                 } else {
                     res.status(401).json({msg: "Incorrect email or password"})
                 }
