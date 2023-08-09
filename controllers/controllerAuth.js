@@ -17,7 +17,6 @@ const login_succes = (req,res) => {
             user: req.user,
             cookies: req.cookies
          })
-
     }
 }
 
@@ -26,15 +25,14 @@ const logout = (req, res) => {
     res.redirect(process.env.CLIENT_URI)
 }
 
-const login = (req, res) => {
+const login = (req, res) => {   
     User.find({email: req.body.email})
     .then(async (user) => {
         if(user.length != 0) {
             user = user[0];        
             try {
                 if(await bcrypt.compare(req.body.password, user.password)) {
-                    user.password = undefined
-                    res.json({user})                    
+                    res.redirect("/auth/login/callback")                   
                 } else {
                     res.status(401).json({msg: "Incorrect email or password"})
                 }
@@ -51,11 +49,11 @@ const login = (req, res) => {
 const register = (req, res) => {
     const emailValid = new RegExp(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/);
     const passwordValid = new RegExp("^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})");
-
+    const blankValid = new RegExp(/\S/);
     try {
-        if(req.body.email == undefined || req.body.name == undefined || req.body.password == undefined) {
+        if(req.body.email == undefined || req.body.name == undefined || req.body.password == undefined || !blankValid.test(req.body.email) || !blankValid.test(req.body.password)) {
             throw "Fill all the required fields"
-        }       
+        }          
         User.find({email: req.body.email})
         .then(async (dbUser) => {
             if(dbUser.length == 0) {
@@ -65,6 +63,9 @@ const register = (req, res) => {
                     if(emailValid.test(req.body.email) == false) {
                         throw "Enter a valid email"
                     } 
+                    if(!blankValid.test(req.body.name.first) || !blankValid.test(req.body.name.last) ) {
+                        throw "Name properties can't be a blank"
+                    }
                     if(passwordValid.test(req.body.password) == false) {
                         throw "Password must contains six characters or more and has at least one lowercase and one uppercase alphabetical character or has at least one lowercase and one numeric character or has at least one uppercase and one numeric character. We’ve chosen to leave special characters out of this one."
                     } 
@@ -78,8 +79,8 @@ const register = (req, res) => {
                 res.status(403).json({msg: "That user already exists"})
             }
         })  
-    } catch (error) {
-        res.status(400).json({error})
+    } catch (msg) {
+        res.status(400).json({msg})
     }
 }
 

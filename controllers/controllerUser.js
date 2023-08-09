@@ -11,7 +11,7 @@ const user_register = async (req, res) => {
         if(req.body.email == undefined || req.body.name == undefined || req.body.password == undefined) {
             throw "Fill all the required fields"
         }       
-        User.find({username: req.body.username})
+        User.find({email: req.body.email})
         .then(async (dbUser) => {
             if(dbUser.length == 0) {
                 const hashedPassword = await bcrypt.hash(req.body.password, 10)
@@ -45,8 +45,7 @@ const user_login = async (req, res) => {
         user = user[0];
         delete user.password
            try {
-                if(await bcrypt.compare(req.body.password, user.password)) {
-                    
+                if(await bcrypt.compare(req.body.password, user.password)) {                    
                         res.json(user)
                     
                 } else {

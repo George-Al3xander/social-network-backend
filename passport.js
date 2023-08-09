@@ -1,6 +1,8 @@
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const LocalStrategy = require("passport-local").Strategy;
 const passport = require("passport");
 const User = require("./models/modelUser.js")
+const bcrypt = require("bcryptjs")
 passport.use(
   new GoogleStrategy(
     {
@@ -47,7 +49,35 @@ passport.use(
   )
 );
 
+passport.use(new LocalStrategy({
+    usernameField: "email",
+    passwordField: "password"
+  },
+  function(username, password, done) {
+    User.findOne({ email: username })
+    .then(async (user) => {              
+           try {
+                if(await bcrypt.compare(password, user.password)) {              
+                  console.log("All good")   
+                  user.password = undefined 
+                  return done(null, user);
+                } else {
+                  console.log("Shit happens")                         
+                  return done(null, false)
+                }
+           } catch (error) {
+              console.log("Shit happens 2")                         
 
+                console.log(error)  
+               //return done({msg: "Incorrect email or password"})
+               return done(null, false)
+
+           }
+                
+    })
+    .catch((err) =>  done(err))
+  }
+));
 
 passport.serializeUser((user, done) => {
   done(null, user);
