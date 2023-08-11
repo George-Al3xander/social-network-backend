@@ -26,7 +26,7 @@ const create_comment = (req, res) => {
 }
 
 const delete_comment = (req,res) => {
-    const id = req.params.id;
+    const id = req.params.commentId;
     if(req.user) {
         Comment.findById(id)
         .then((comment) => {            
@@ -60,8 +60,27 @@ const get_post_comments = (req, res) => {
     }
 }
 
+const edit_comment = (req, res) => {
+    const id = req.params.id;   
+    const commentId = req.params.commentId;   
+    if(req.user) {
+        Post.findById(id)
+        .then(() => {            
+            Comment.findByIdAndUpdate(commentId,{$set: {
+                text: req.body.text
+            }})
+            .then(() => res.json({msg: "Comment updated"}))
+            .catch(() => res.status(400).json({msg: "Error"}))
+        })
+        .catch(() => res.status(400).json({msg: "Invalid post id"}))
+    } else {
+        res.status(403).json({msg: "No user signed"})
+    }
+}
+
 module.exports = {
     create_comment,
     delete_comment,
-    get_post_comments
+    get_post_comments,
+    edit_comment
 }

@@ -120,6 +120,12 @@ const update_post = (req, res) => {
     if(req.user) {
         const valid = new RegExp(/\S/);
         try {
+        Post.findById(id)
+        .then((post) => {
+            if(req.user._id != post.user.id) {
+                throw "Access denied"                
+            } 
+            })
             if(valid.test(req.body.text) == false)  {
                 throw "Text can't be empy"
             }             
@@ -141,7 +147,7 @@ const delete_post = (req, res) => {
     if(req.user) {
         Post.findById(id)
         .then((post) => {
-           if(req.user._id == post.userId) {
+           if(req.user._id == post.user.id) {
                 Post.findByIdAndDelete(id)
                 .then(() => res.status(200).json({msg: "Post deleted"}))
                 .catch((err) => res.status(400).json({msg: err}))
