@@ -68,17 +68,17 @@ const get_feed = (req, res) => {
                 return posts
             })                        
             relations = (await Promise.all(relations)).flat();
-            relations = relations.map(async (post) => {
-                post = post._doc;              
-                const comments = await Comment.find({postId: post._id});
-                const likes = await Like.find({postId: post._id});
+            // relations = relations.map(async (post) => {
+            //     post = post._doc;              
+            //     const comments = await Comment.find({postId: post._id});
+            //     const likes = await Like.find({postId: post._id});
                 
-                return {...post,comments, likes}
+            //     return {...post,comments, likes}
                 
-            })
-            relations = (await Promise.all(relations)).flat();
+            // })
+            // relations = (await Promise.all(relations)).flat();
 
-            //console.log(relations)
+            // //console.log(relations)
             res.json({data: relations})
        })
     } else {
@@ -115,6 +115,27 @@ const get_one = (req, res) => {
     }
 }
 
+const update_post = (req, res) => {
+    const postId = req.params.id;
+    if(req.user) {
+        const valid = new RegExp(/\S/);
+        try {
+            if(valid.test(req.body.text) == false)  {
+                throw "Text can't be empy"
+            }             
+            Post.findByIdAndUpdate(postId, {$set: {
+                text: req.body.text
+            }})
+            .then(() => res.redirect(process.env.CLIENT_URI))
+            .catch(() => res.status(400).json({msg: "Error"}))
+        } catch (error) {
+            res.status(403).json({msg: error})
+        }
+    } else {
+        res.status(403).json({msg: "No user signed"})
+    }
+}
+
 const delete_post = (req, res) => {
     const id = req.params.id;
     if(req.user) {
@@ -143,5 +164,6 @@ module.exports = {
     create_post,
     get_one,
     delete_post,
-    get_feed
+    get_feed,
+    update_post
 }
