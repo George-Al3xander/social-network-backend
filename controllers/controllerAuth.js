@@ -9,7 +9,7 @@ const login_failed = (req,res) => {
      })
 }
 
-const login_succes = (req,res) => {
+const login_success = (req,res) => {
     if(req.user) {        
             res.status(200).json({
             success: true,
@@ -86,7 +86,7 @@ const register = (req, res) => {
 
 module.exports = {
     login_failed,
-    login_succes,
+    login_success,
     logout,
     login,
     register

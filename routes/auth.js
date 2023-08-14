@@ -10,7 +10,7 @@ router.get("/google", passport.authenticate("google", {scope: ['profile', 'email
 router.post("/register", controller.register);
 
 router.get("/login/failed" , controller.login_failed);
-router.get("/login/success" ,  controller.login_succes);
+router.get("/login/success" ,  controller.login_success);
 router.get("/logout", controller.logout);
 
 router.post("/login", 

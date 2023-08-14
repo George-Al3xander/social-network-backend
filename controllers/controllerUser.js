@@ -1,66 +1,6 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/modelUser.js");
 
-
-
-const user_register = async (req, res) => {
-    const emailValid = new RegExp(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/);
-    const passwordValid = new RegExp(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*_)(?!.*\W)(?!.* ).{8,16}$/);
-
-    try {
-        if(req.body.email == undefined || req.body.name == undefined || req.body.password == undefined) {
-            throw "Fill all the required fields"
-        }       
-        User.find({email: req.body.email})
-        .then(async (dbUser) => {
-            if(dbUser.length == 0) {
-                const hashedPassword = await bcrypt.hash(req.body.password, 10)
-                const user = {...req.body, password: hashedPassword}
-                try {
-                    if(emailValid.test(req.body.email) == false) {
-                        throw "You have entered an invalid email address!"
-                    } 
-                    if(passwordValid.test(req.body.password) == false) {
-                        throw "Password must contain one digit from 1 to 9, one lowercase letter, one uppercase letter, one underscore but no other special character, no space and it must be 8-16 characters long."
-                    } 
-                    await new User(user).save()
-                    .then(() => res.status(200).json({msg: "User saved"}))
-                    .catch((err) => res.sendStatus(500));
-                } catch (error) {
-                    res.status(403).json({msg: error})
-                }                
-            } else {
-                res.status(403).json({msg: "That user already exists"})
-            }
-        })  
-    } catch (error) {
-        res.status(400).json({error})
-    }
-}
-
-const user_login = async (req, res) => {
-    User.find({email: req.body.email})
-    .then(async (user) => {
-        if(user.length != 0) {
-        user = user[0];
-        delete user.password
-           try {
-                if(await bcrypt.compare(req.body.password, user.password)) {                    
-                        res.json(user)
-                    
-                } else {
-                    res.status(401).json({msg: "Incorrect email or password"})
-                }
-           } catch (error) {
-                res.status(401).json({msg: "Incorrect email or password"})
-           }
-        } else {
-            res.status(401).json({msg: "Incorrect email or password"})
-        }        
-    })
-    .catch((err) => res.json({err}))
-}
-
 const user_search = (req, res) => {
     const searchKey = req.query.searchKey;
     const id = req.params.id;
@@ -99,56 +39,61 @@ const user_search = (req, res) => {
 }
 
 const user_edit = (req, res) => {    
-    const id = req.params.id;
-    const usernameValid = new RegExp(/^(?=(?:[0-9_]*[a-z]){3})[a-z0-9_]{5,}$/);
-    const blankValid = new RegExp(/\S/);
-    try {              
-        User.find({username: req.body.username})
-        .then(async (dbUser) => {
-            if(dbUser.length == 0) {
-                try {
-                    if(usernameValid.test(req.body.username) == false && req.body.username != undefined) {
-                        throw "Username must be at least 5-characters long(no less than 3 characters of that length must be letters), no spaces, and may consist only of lowercase letters, numbers, and underscores."
-                    } 
-                    if(req.body.name) {                        
-                        if(req.body.name.first != undefined) {
-                            if(blankValid.test(req.body.name.first) == false ) {
-                                throw "First name cant't be a blank"
-                            }
-                        } 
-                        if(req.body.name.last != undefined) {
-                            if(blankValid.test(req.body.name.last) == false ) {
-                                throw "last name cant't be a blank"
-                            }
+    const emailValid = new RegExp(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/);
+    const passwordValid = new RegExp("^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})");
+    const valid = new RegExp(/\S/);
+    if(req.user) {
+        try {
+            User.findOne({email: req.user.email})
+            .then(async (user) => {                
+                if(await bcrypt.compare(req.body.password, user.password)) {   
+                    // if(req.body.password && !passwordValid.test(req.body.password)) {
+                    //     throw
+                    // }
+                    if(req.body.email && !emailValid.test(req.body.email)) {
+                        throw "Invalid email"
+                    }
+                    if(req.body.name) {
+                        if(req.body.name.first && !valid.test(req.body.name.first)) {
+                            throw "First name can't be a blank"
                         }
-                    } 
-                    const user = await User.findById(id);
-                    User.findByIdAndUpdate(id, {
-                        username: req.body.username ? req.body.username.trim() : user.username,
-                        name: {
-                            first: (req.body.name && req.body.name.first && blankValid.test(req.body.name.first)) ? req.body.name.first.trim() : user.name.first,
-                            last: (req.body.name && req.body.name.last && blankValid.test(req.body.name.last)) ? req.body.name.last.trim() : user.name.last
+                        if(req.body.name.last && !valid.test(req.body.name.last)) {
+                            throw "Last name can't be a blank"
                         }
+                    }
+                    let updateObj = req.body;
+                    delete updateObj.password
+                    console.log(updateObj)
+                    User.findByIdAndUpdate(user._id, {
+                        $set:
+                        // {
+                        //     name: {
+                        //         first: req.body.name.first != user.name.first ? req.body.name.first : user.name.first,
+                        //         last: req.body.name.last != user.name.last ? req.body.name.last : user.name.last
+                        //     },
+                        //     email: req.body.email != user.email ? req.body.email : user.email,
+                        //     avatar: req.body.avatar != user.avatar ? req.body.avatar : user.avatar,
+                        // }
+                        updateObj
                     })
-                    .then(() => res.status(200).json({msg: "Changes saved"}))
-                    .catch((err) => res.sendStatus(500));
-                } catch (error) {
-                    console.log(error)
-                    res.status(403).json({msg: error})
-                }                
-            } else {
-                res.status(403).json({msg: "Username already taken"})
-            }
-        })  
-    } catch (error) {
-        res.status(400).json({error})
+                .then(() => res.json({msg: "User updated"}))
+                .catch(() => res.status(400).json({msg: "Error"}))
+                                 
+                } else {
+                    res.status(401).json({msg: "Incorrect password"})
+                }
+            })
+            
+       } catch (error) {
+            res.status(401).json({msg: "Incorrect email or password"})
+       }        
+    } else {
+        res.status(403).json({msg: "No user signed"})
     }
 
 }
 
-module.exports = {
-    user_register,
-    user_login,
+module.exports = {    
     user_search,   
     user_edit
 }
