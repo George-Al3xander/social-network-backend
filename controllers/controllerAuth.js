@@ -11,12 +11,15 @@ const login_failed = (req,res) => {
 
 const login_success = (req,res) => {
     if(req.user) {        
-            res.status(200).json({
-            success: true,
-            message: "Loged in",
-            user: req.user,
-            cookies: req.cookies
-         })
+            User.findById(req.user._id)
+            .then((user) => {
+                res.status(200).json({
+                    success: true,
+                    message: "Loged in",
+                    user,
+                    cookies: req.cookies
+                 })
+            })
     }
 }
 

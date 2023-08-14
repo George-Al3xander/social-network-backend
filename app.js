@@ -18,19 +18,9 @@ const passportSetup = require('./passport');
 const cors = require("cors")
 const app = express();
 const bodyParser = require('body-parser')
+app.use(bodyParser.urlencoded({limit: "2mb", extended: true}))
+app.use(bodyParser.json({limit: "2mb", extended: true}))
 
-// function convertToBase64(file){
-//   return new Promise((resolve, reject) => {
-//     const fileReader = new FileReader();
-//     fileReader.readAsDataURL(file);
-//     fileReader.onload = () => {
-//       resolve(fileReader.result)
-//     };
-//     fileReader.onerror = (error) => {
-//       reject(error)
-//     }
-//   })
-// }
 
 const db_uri = process.env.DB_URI
 mongoose.connect(db_uri , {useNewUrlParser: true, useUnifiedTopology: true})
@@ -64,17 +54,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-const images = []
-
-app.get("/image", (req, res) => {
-  res.json({img: images})
-})
-
-app.post("/image", (req, res) => {
-  images.push(req.body.img)
-  res.json({img: req.body.img})
-})
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);

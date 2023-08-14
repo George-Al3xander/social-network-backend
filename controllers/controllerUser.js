@@ -1,5 +1,8 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/modelUser.js");
+const Comment = require("../models/modelComment.js");
+const Post = require("../models/modelPost.js");
+
 
 const user_search = (req, res) => {
     const searchKey = req.query.searchKey;
@@ -46,7 +49,7 @@ const user_edit = (req, res) => {
         try {
             User.findOne({email: req.user.email})
             .then(async (user) => {                
-                if(await bcrypt.compare(req.body.password, user.password)) {   
+                //if(await bcrypt.compare(req.body.password, user.password)) {   
                     // if(req.body.password && !passwordValid.test(req.body.password)) {
                     //     throw
                     // }
@@ -63,25 +66,35 @@ const user_edit = (req, res) => {
                     }
                     let updateObj = req.body;
                     delete updateObj.password
-                    console.log(updateObj)
+                    
                     User.findByIdAndUpdate(user._id, {
-                        $set:
-                        // {
-                        //     name: {
-                        //         first: req.body.name.first != user.name.first ? req.body.name.first : user.name.first,
-                        //         last: req.body.name.last != user.name.last ? req.body.name.last : user.name.last
-                        //     },
-                        //     email: req.body.email != user.email ? req.body.email : user.email,
-                        //     avatar: req.body.avatar != user.avatar ? req.body.avatar : user.avatar,
-                        // }
-                        updateObj
-                    })
-                .then(() => res.json({msg: "User updated"}))
+                        $set: updateObj
+                    },  {new: true})
+                    .then((user) => {
+                        let newUser = {
+                            name: user.name,
+                            id: user._id,
+                            avatar: user.avatar
+                        }
+                        if(user.avatar) {
+                            newUser = {...newUser, avatar: user.avatar}
+                        }
+                        Post.updateMany({"user.id" : user._id},
+                        {$set: {user: newUser}}                    
+                        ).then(() => {
+                            Comment.updateMany({"user.id" : user._id},
+                            {$set: {user: newUser}})
+                            .then(() => {
+                                res.json({msg: "User updated"})
+                            })
+                            .catch(() => res.status(400).json({msg: "Error"}))
+                            })
+                        .catch(() => res.status(400).json({msg: "Error"}))
+                })
                 .catch(() => res.status(400).json({msg: "Error"}))
-                                 
-                } else {
-                    res.status(401).json({msg: "Incorrect password"})
-                }
+                // } else {
+                //     res.status(401).json({msg: "Incorrect password"})
+                // }
             })
             
        } catch (error) {
