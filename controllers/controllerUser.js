@@ -5,40 +5,36 @@ const Post = require("../models/modelPost.js");
 
 
 const user_search = (req, res) => {
-    const searchKey = req.query.searchKey;
-    const id = req.params.id;
-    const status = req.query.status;
+    const searchKey = req.query.searchKey;    
     let valid = new RegExp(`${searchKey.toLowerCase()}`);
-    User.find()
-    .then((users) => {   
-        try {            
-            let filtered;
-            if(status == "full") {
-                filtered = users.filter((user) => {  
-                    return (
-                    (
-                        valid.test(user.username.toLowerCase()) == true || 
+    if(req.user) {
+        User.find()
+        .then((users) => {   
+            try {            
+                let filtered = users.filter((user) => {  
+                return ((                   
                         valid.test(user.name.first.toLowerCase()) == true || 
                         valid.test(user.name.last.toLowerCase()) == true ||
                         valid.test(user.name.first.toLowerCase() + " " + user.name.last.toLowerCase()) == true
-                    ) 
-                    && user._id.toString() !== id) 
+                        ) 
+                        && user._id.toString() !== req.user._id) 
+                    })  
+                const result = filtered.map((fil) => {
+                    let obj = {name: fil.name, id: fil._id}
+                    if(fil.avatar) {
+                        obj = {...obj, avatar: fil.avatar}
+                    }                    
+                    return obj
                 })
-            } else {
-                filtered = users.filter((user) => {  
-                    return (valid.test(user.username.toLowerCase()) == true && user._id.toString() !== id) 
-                })
+                res.json({data: result})
+            } catch (error) {
+                res.status(400).json({msg: "Something went wrong"})
             }
-           
-            const result = filtered.map((fil) => {
-            return {name: fil.name, id: fil._id, username: fil.username}
-            })
-            res.json({data: result})
-        } catch (error) {
-            res.status(400).json({msg: "Something went wrong"})
-        }
-    })
-    .catch(() => res.status(400).json({msg: "Something went wrong"}))
+        })
+        .catch(() => res.status(400).json({msg: "Something went wrong"}))
+    } else {
+        res.status(403).json({msg: "No user signed"})
+    }    
 }
 
 const user_edit = (req, res) => {    
@@ -106,7 +102,25 @@ const user_edit = (req, res) => {
 
 }
 
+
+const user_get = (req, res) => {
+    const id = req.query.id;    
+    
+    if(req.user) {
+        User.findById(id)
+        .then((user) => {   
+            delete user.password
+            res.json({user})
+        })
+        .catch(() => res.status(400).json({msg: "Invalid user ID"}))
+    } else {
+        res.status(403).json({msg: "No user signed"})
+    }
+}
+
+
 module.exports = {    
     user_search,   
-    user_edit
+    user_edit,
+    user_get
 }
