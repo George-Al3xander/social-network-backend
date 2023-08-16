@@ -60,14 +60,23 @@ const get_feed = (req, res) => {
     if(req.user) {
        Friendship.find({status: true, participants: {$in: [req.user._id]}})
        .then(async (relations) => {            
-            relations = await relations.map(async (rel) => {
-                let posts = await Post.find();
-                posts = posts.filter((post) => {
-                    return rel.participants.includes(post.user.id)
-                })   
-                return posts
-            })                        
-            relations = (await Promise.all(relations)).flat();
+            if(relations.length > 0) {
+                relations = await relations.map(async (rel) => {
+                    let posts = await Post.find();
+                    posts = posts.filter((post) => {
+                        return rel.participants.includes(post.user.id)
+                    })   
+                    return posts
+                })                        
+                relations = (await Promise.all(relations)).flat();
+                res.json({data: relations})
+            } else {
+                Post.find({"user.id": req.user._id})
+                .then((data) => {
+                    res.json({data})
+
+                })
+            }
             // relations = relations.map(async (post) => {
             //     post = post._doc;              
             //     const comments = await Comment.find({postId: post._id});
@@ -79,7 +88,6 @@ const get_feed = (req, res) => {
             // relations = (await Promise.all(relations)).flat();
 
             // //console.log(relations)
-            res.json({data: relations})
        })
     } else {
         res.status(403).json({msg: "No user signed"})
