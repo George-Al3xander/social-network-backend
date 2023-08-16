@@ -6,10 +6,18 @@ const send_request = (req, res) => {
         const friendId = req.body.friendId;        
         User.findById(friendId)
         .then((user) => {
-            console.log(user)
+            Friendship.findOne({participants: {$all: [req.user._id, friendId]}})
+            .then((rel) => {
+               if(rel == null) {
                 new Friendship({status: false, participants: [req.user._id, friendId]}).save()
                 .then(() => res.json({msg: "Request sent"}))
                 .catch(() => res.status(400).json({msg: "Error"}))
+               } else {
+                res.status(409).json("Request already exists")
+               }
+            })
+            
+                
         })
         .catch(() => res.status(400).json({msg: "Invalid user id"}))
     } else {

@@ -60,18 +60,18 @@ passport.use(new LocalStrategy({
                 if(await bcrypt.compare(password, user.password)) {              
                   console.log("All good")   
                   user.password = undefined 
+                  user.avatar = undefined 
+                  console.log(user)
                   return done(null, user);
                 } else {
                   console.log("Shit happens")                         
                   return done(null, false)
                 }
            } catch (error) {
-              console.log("Shit happens 2")                         
-
+              console.log("Shit happens 2")   
                 console.log(error)  
                //return done({msg: "Incorrect email or password"})
                return done(null, false)
-
            }
                 
     })
