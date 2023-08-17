@@ -30,7 +30,7 @@ mongoose.connect(db_uri , {useNewUrlParser: true, useUnifiedTopology: true})
 .catch((err) => {console.log(err)});
 
 app.use(cors({
-  origin: true,  
+  origin: process.env.CLIENT_URI,  
   credentials: true,
 }))
 app.use(cookieSession({
