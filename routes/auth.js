@@ -2,7 +2,8 @@ const express = require('express');
 const passport = require('passport');
 
 const router = express.Router();
-const controller = require("../controllers/controllerAuth")
+const controller = require("../controllers/controllerAuth");
+const verifyToken = require('../verifyToken');
 
 router.get("/google", passport.authenticate("google", {scope: ['profile', 'email',"openid"]}));
 
@@ -10,14 +11,10 @@ router.get("/google", passport.authenticate("google", {scope: ['profile', 'email
 router.post("/register", controller.register);
 
 router.get("/login/failed" , controller.login_failed);
-router.get("/login/success" ,  controller.login_success);
+router.get("/login/success" ,verifyToken ,  controller.login_success);
 router.get("/logout", controller.logout);
 
-router.post("/login", 
-passport.authenticate('local',{
-    successRedirect: process.env.CLIENT_URI,
-    failureRedirect: `${process.env.CLIENT_URI}/#/login?status=401`
-}))
+router.post("/login", controller.login)
 
 
 router.get(

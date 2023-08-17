@@ -29,7 +29,7 @@ const getSortedPost = (id) =>  {
 }
 
 const get_all = (req,res) => {
-    if(req.user) {
+    //if(req.user) {
         let id = req.user._id;        
         if(req.query.userId) {
             id = req.query.userId; 
@@ -47,9 +47,9 @@ const get_all = (req,res) => {
         .catch((err) => {
            res.status(404).json({msg: "Invalid user ID"})
         })
-    } else {
-        res.status(403).json({msg: "No user signed"})
-    }
+    // } else {
+    //     res.status(403).json({msg: "No user signed"})
+    // }
 }
 
 //                      const comments = await Comment.find({postId: post._id});
@@ -57,7 +57,7 @@ const get_all = (req,res) => {
 //                     return {...post,comments, likes}
 
 const get_feed = (req, res) => {
-    if(req.user) {
+   // if(req.user) {
        Friendship.find({status: true, participants: {$in: [req.user._id]}})
        .then(async (relations) => {            
             if(relations.length > 0) {
@@ -89,9 +89,9 @@ const get_feed = (req, res) => {
 
             // //console.log(relations)
        })
-    } else {
-        res.status(403).json({msg: "No user signed"})
-    }
+    // } else {
+    //     res.status(403).json({msg: "No user signed"})
+    // }
 }
 
 const create_post = (req , res) => {    

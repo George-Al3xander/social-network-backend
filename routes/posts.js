@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const controller = require("../controllers/controllerPost")
 const controllerComment = require("../controllers/controllerComment")
-const controllerLike = require("../controllers/controllerLike")
+const controllerLike = require("../controllers/controllerLike");
+const verifyToken = require('../verifyToken');
 
 
 router.get("/", controller.get_all);

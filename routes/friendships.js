@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const controller = require("../controllers/controllerFriendship")
+const controller = require("../controllers/controllerFriendship");
+const verifyToken = require('../verifyToken');
 
 router.post("/", controller.send_request);
 router.delete("/", controller.decline_request);

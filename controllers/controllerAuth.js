@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/modelUser.js");
+const jwt = require('jsonwebtoken')
 
 
 const login_failed = (req,res) => {
@@ -10,17 +11,21 @@ const login_failed = (req,res) => {
 }
 
 const login_success = (req,res) => {
-    if(req.user) {        
-            User.findById(req.user._id)
-            .then((user) => {
+    const bearerHeader = req.headers["authorization"];
+    const bearer = bearerHeader.split(" ");
+    const bearerToken = bearer[1];
+    let tokenUser = jwt.decode(bearerToken, process.env.SECRET_KEY);
+    tokenUser = tokenUser.user;       
+        User.findById(tokenUser._id)
+            .then((user) => {                
                 res.status(200).json({
                     success: true,
                     message: "Loged in",
                     user,
                     cookies: req.cookies
                  })
-            })
-    }
+        })
+    
 }
 
 const logout = (req, res) => {
@@ -28,22 +33,30 @@ const logout = (req, res) => {
     res.redirect(process.env.CLIENT_URI)
 }
 
+// passport.authenticate('local',{
+//     successRedirect: process.env.CLIENT_URI,
+//     failureRedirect: `${process.env.CLIENT_URI}/#/login?status=401`
+// })
+
+
 const login = (req, res) => {   
-    User.find({email: req.body.email})
+    User.findOne({email: req.body.email})
     .then(async (user) => {
-        if(user.length != 0) {
-            user = user[0];        
+        if(user != null) {                 
             try {
                 if(await bcrypt.compare(req.body.password, user.password)) {
-                    res.redirect("/auth/login/callback")                   
+                    jwt.sign({user}, process.env.SECRET_KEY, (err,token) => {
+                        res.redirect(`${process.env.CLIENT_URI}?token=${token}`)                         
+
+                    });
                 } else {
-                    res.status(401).json({msg: "Incorrect email or password"})
+                   res.redirect(`${process.env.CLIENT_URI}/#/login?status=401`)
                 }
            } catch (error) {
-                res.status(401).json({msg: "Incorrect email or password"})
+               res.redirect(`${process.env.CLIENT_URI}/#/login?status=401`)
            }
         } else {
-            res.status(401).json({msg: "Incorrect email or password"})
+           res.redirect(`${process.env.CLIENT_URI}/#/login?status=401`)
         }        
     })
     .catch((err) => res.json({err}))
