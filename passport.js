@@ -79,10 +79,14 @@ passport.use(new LocalStrategy({
   }
 ));
 
-passport.serializeUser((user, done) => {
-  done(null, user);
+passport.serializeUser((user, cb) => {
+  cb(null, user.id);
 });
-
-passport.deserializeUser((user, done) => {
-  done(null, user);
+passport.deserializeUser((id, cb) => {
+  User.findOne({ _id: id }, (err, user) => {
+    const userInformation = {
+      username: user.username,
+    };
+    cb(err, userInformation);
+  });
 });

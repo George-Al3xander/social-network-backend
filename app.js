@@ -20,7 +20,7 @@ const app = express();
 const bodyParser = require('body-parser')
 app.use(bodyParser.urlencoded({limit: "2mb", extended: true}))
 app.use(bodyParser.json({limit: "2mb", extended: true}))
-
+parser
 
 const db_uri = process.env.DB_URI
 mongoose.connect(db_uri , {useNewUrlParser: true, useUnifiedTopology: true})
@@ -35,14 +35,14 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 100,
   secure: false
 }))
-
-app.use(passport.initialize())
-app.use(passport.session())
-
 app.use(cors({
   origin: "https://george-al3xander.github.io",  
   credentials: true,
 }))
+
+app.use(passport.initialize())
+app.use(passport.session())
+
 
 
 // view engine setup
