@@ -12,7 +12,7 @@ const login_failed = (req,res) => {
 const login_success = (req,res) => {
     if(req.user) {        
             User.findById(req.user._id)
-            .then((user) => {               
+            .then((user) => {
                 res.status(200).json({
                     success: true,
                     message: "Loged in",
@@ -20,8 +20,6 @@ const login_success = (req,res) => {
                     cookies: req.cookies
                  })
             })
-    } else {
-        res.status(400).json({msg: "Idk what to say"})
     }
 }
 

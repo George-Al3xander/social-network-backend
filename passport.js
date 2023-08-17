@@ -55,10 +55,7 @@ passport.use(new LocalStrategy({
   },
   function(username, password, done) {
     User.findOne({ email: username })
-    .then(async (user) => {    
-      console.log("---New local strategy---")
-      console.log(user)
-      console.log("------------")         
+    .then(async (user) => {              
            try {
                 if(await bcrypt.compare(password, user.password)) {              
                   console.log("All good")   
@@ -83,15 +80,9 @@ passport.use(new LocalStrategy({
 ));
 
 passport.serializeUser((user, done) => {
-  console.log("---Serialize---")
-  console.log(user)
-  console.log("------------")
   done(null, user);
 });
 
 passport.deserializeUser((user, done) => {
-  console.log("---Deserialize---")
-  console.log(user)
-  console.log("------------")
   done(null, user);
 });
