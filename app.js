@@ -29,6 +29,10 @@ mongoose.connect(db_uri , {useNewUrlParser: true, useUnifiedTopology: true})
   console.log("Connected to DB")})
 .catch((err) => {console.log(err)});
 
+app.use(cors({
+  origin: true,  
+  credentials: true,
+}))
 app.use(cookieSession({
   name: "session",
   keys: [process.env.SECRET_KEY],
@@ -38,10 +42,6 @@ app.use(cookieSession({
 app.use(passport.initialize())
 app.use(passport.session())
 
-app.use(cors({
-  origin: true,  
-  credentials: true,
-}))
 
 
 // view engine setup
