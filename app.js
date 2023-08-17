@@ -20,7 +20,7 @@ const app = express();
 const bodyParser = require('body-parser')
 app.use(bodyParser.urlencoded({limit: "2mb", extended: true}))
 app.use(bodyParser.json({limit: "2mb", extended: true}))
-parser
+
 
 const db_uri = process.env.DB_URI
 mongoose.connect(db_uri , {useNewUrlParser: true, useUnifiedTopology: true})
