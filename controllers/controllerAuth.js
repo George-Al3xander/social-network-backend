@@ -20,6 +20,8 @@ const login_success = (req,res) => {
                     cookies: req.cookies
                  })
             })
+    } else {
+        res.status(400).json({msg: "Idk what to say"})
     }
 }
 
