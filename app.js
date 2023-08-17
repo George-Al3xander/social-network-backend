@@ -30,7 +30,7 @@ mongoose.connect(db_uri , {useNewUrlParser: true, useUnifiedTopology: true})
 .catch((err) => {console.log(err)});
 
 app.use(cors({
-  origin: "https://george-al3xander.github.io",  
+  origin: true,  
   credentials: true,
 }))
 app.use(cookieSession({
