@@ -15,9 +15,12 @@ const login_success = (req,res) => {
     const bearer = bearerHeader.split(" ");
     const bearerToken = bearer[1];
     let tokenUser = jwt.decode(bearerToken, process.env.SECRET_KEY);
-    tokenUser = tokenUser.user;       
+    tokenUser = tokenUser.user;  
         User.findById(tokenUser._id)
-            .then((user) => {                
+            .then((user) => {   
+                user.password = undefined   
+                user.avatar = undefined  
+                console.log(user)           
                 res.status(200).json({
                     success: true,
                     message: "Loged in",
@@ -45,7 +48,10 @@ const login = (req, res) => {
         if(user != null) {                 
             try {
                 if(await bcrypt.compare(req.body.password, user.password)) {
-                    jwt.sign({user}, process.env.SECRET_KEY, (err,token) => {
+                    user.avatar = undefined
+                    jwt.sign({user}, process.env.SECRET_KEY, 
+                        // {expiresIn: "30s"}, 
+                        (err,token) => {
                         res.redirect(`${process.env.CLIENT_URI}?token=${token}`)                         
 
                     });

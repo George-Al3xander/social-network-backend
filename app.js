@@ -17,7 +17,6 @@ const passport = require('passport');
 const passportSetup = require('./passport');
 const cors = require("cors")
 const app = express();
-
 const bodyParser = require('body-parser')
 app.use(bodyParser.urlencoded({limit: "2mb", extended: true}))
 app.use(bodyParser.json({limit: "2mb", extended: true}))

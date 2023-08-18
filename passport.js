@@ -61,7 +61,7 @@ passport.use(new LocalStrategy({
                   console.log("All good")   
                   user.password = undefined 
                   user.avatar = undefined 
-                  console.log(user)
+                 // console.log(user)
                   return done(null, user);
                 } else {
                   console.log("Shit happens")                         
@@ -83,6 +83,6 @@ passport.serializeUser((user, done) => {
   done(null, user);
 });
 
-passport.deserializeUser((user, done) => {
+passport.deserializeUser((user, done) => {  
   done(null, user);
 });

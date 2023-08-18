@@ -3,7 +3,7 @@ const router = express.Router();
 const controller = require("../controllers/controllerComment");
 const verifyToken = require('../verifyToken');
 
-router.post("/", controller.create_comment);
-router.delete("/:id", controller.delete_comment);
+router.post("/",verifyToken, controller.create_comment);
+router.delete("/:id",verifyToken, controller.delete_comment);
 
 module.exports = router;

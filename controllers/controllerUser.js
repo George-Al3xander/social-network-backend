@@ -2,12 +2,14 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/modelUser.js");
 const Comment = require("../models/modelComment.js");
 const Post = require("../models/modelPost.js");
+const jwt = require("jsonwebtoken");
 
 
 const user_search = (req, res) => {
     const searchKey = req.query.searchKey;    
+    const tokenUser = jwt.decode(req.token, process.env.SECRET_KEY).user; 
     let valid = new RegExp(`${searchKey.toLowerCase()}`);
-    if(req.user) {
+    // if(req.user) {
         User.find()
         .then((users) => {   
             try {            
@@ -17,7 +19,7 @@ const user_search = (req, res) => {
                         valid.test(user.name.last.toLowerCase()) == true ||
                         valid.test(user.name.first.toLowerCase() + " " + user.name.last.toLowerCase()) == true
                         ) 
-                        && user._id.toString() !== req.user._id) 
+                        && user._id.toString() !== tokenUser._id) 
                     })  
                 const result = filtered.map((fil) => {
                     let obj = {name: fil.name, id: fil._id}
@@ -32,18 +34,19 @@ const user_search = (req, res) => {
             }
         })
         .catch(() => res.status(400).json({msg: "Something went wrong"}))
-    } else {
-        res.status(403).json({msg: "No user signed"})
-    }    
+    // } else {
+    //     res.status(403).json({msg: "No user signed"})
+    // }    
 }
 
 const user_edit = (req, res) => {    
     const emailValid = new RegExp(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/);
     const passwordValid = new RegExp("^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})");
     const valid = new RegExp(/\S/);
-    if(req.user) {
+    const tokenUser = jwt.decode(req.token, process.env.SECRET_KEY).user; 
+    // if(req.user) {
         try {
-            User.findOne({email: req.user.email})
+            User.findById(tokenUser._id)
             .then(async (user) => {                
                 //if(await bcrypt.compare(req.body.password, user.password)) {   
                     // if(req.body.password && !passwordValid.test(req.body.password)) {
@@ -94,11 +97,11 @@ const user_edit = (req, res) => {
             })
             
        } catch (error) {
-            res.status(401).json({msg: "Incorrect email or password"})
+            res.status(401).json({msg: error})
        }        
-    } else {
-        res.status(403).json({msg: "No user signed"})
-    }
+    // } else {
+    //     res.status(403).json({msg: "No user signed"})
+    // }
 
 }
 
@@ -106,21 +109,33 @@ const user_edit = (req, res) => {
 const user_get = (req, res) => {
     const id = req.query.id;    
     
-    if(req.user) {
+    // if(req.user) {
         User.findById(id)
         .then((user) => {   
             delete user.password
             res.json({user})
         })
         .catch(() => res.status(400).json({msg: "Invalid user ID"}))
-    } else {
-        res.status(403).json({msg: "No user signed"})
-    }
+    // } else {
+    //     res.status(403).json({msg: "No user signed"})
+    // }
 }
+
+
+const user_get_current = (req, res) => {
+    const tokenUser = jwt.decode(req.token, process.env.SECRET_KEY).user; 
+    User.findById(tokenUser._id)
+    .then((user) => {
+        delete user.password;
+        res.json({user})   
+    })
+    .catch(() => res.status(400).json({msg: "Invalid user ID"}))
+}   
 
 
 module.exports = {    
     user_search,   
     user_edit,
-    user_get
+    user_get,
+    user_get_current
 }

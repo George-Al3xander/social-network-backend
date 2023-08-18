@@ -4,8 +4,10 @@ const controller = require("../controllers/controllerUser");
 const verifyToken = require('../verifyToken');
 
 /* GET users listing. */
-router.put('/',  controller.user_edit);
-router.get('/search',  controller.user_search);
-router.get('/',  controller.user_get);
+router.put('/',verifyToken,  controller.user_edit);
+router.get('/search',verifyToken,  controller.user_search);
+router.get('/', verifyToken, controller.user_get);
+
+router.get('/current',verifyToken,  controller.user_get_current);
 
 module.exports = router;

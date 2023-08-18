@@ -3,6 +3,7 @@ const Comment = require("../models/modelComment")
 const Like = require("../models/modelLike")
 const User = require("../models/modelUser")
 const Friendship = require("../models/modelFriendship.js")
+const jwt = require("jsonwebtoken");
 
 const getSortedPost = (id) =>  {
     let finPost = {};
@@ -30,13 +31,13 @@ const getSortedPost = (id) =>  {
 
 const get_all = (req,res) => {
     //if(req.user) {
-        let id = req.user._id;        
+        const user = jwt.decode(req.token, process.env.SECRET_KEY).user; 
+        let id = user._id;        
         if(req.query.userId) {
             id = req.query.userId; 
         } 
         User.findById(id)
-        .then((user) => {
-            console.log(user)
+        .then((user) => {            
             Post.find()
             .then(async (postsDb) => {
                 postsDb = postsDb.filter((post) => post.user.id == id)
@@ -58,7 +59,10 @@ const get_all = (req,res) => {
 
 const get_feed = (req, res) => {
    // if(req.user) {
-       Friendship.find({status: true, participants: {$in: [req.user._id]}})
+   // console.log(req.token)
+       const user = jwt.decode(req.token, process.env.SECRET_KEY).user; 
+       console.log(user)
+       Friendship.find({status: true, participants: {$in: [user._id]}})
        .then(async (relations) => {            
             if(relations.length > 0) {
                 relations = await relations.map(async (rel) => {
@@ -68,13 +72,13 @@ const get_feed = (req, res) => {
                     })   
                     return posts
                 })                        
-                relations = (await Promise.all(relations)).flat();
+                relations = (await Promise.all(relations)).flat();  
+                //console.log(relations)              
                 res.json({data: relations})
-            } else {
-                Post.find({"user.id": req.user._id})
+            } else {   
+                Post.find({"user.id": user._id})
                 .then((data) => {
                     res.json({data})
-
                 })
             }
             // relations = relations.map(async (post) => {
@@ -95,42 +99,50 @@ const get_feed = (req, res) => {
 }
 
 const create_post = (req , res) => {    
-    if(req.user) {
+    //if(req.user) {
+        const tokenUser = jwt.decode(req.token, process.env.SECRET_KEY).user; 
         const valid = new RegExp(/\S/);
-        try {
-            if(valid.test(req.body.text) == false)  {
-                throw "Text can't be empy"
-            }             
-            new Post({user: {id: req.user._id, name: req.user.name, avatar : req.user.avatar ? req.user.avatar : undefined}, text: req.body.text}).save()
-            .then(() => res.redirect(process.env.CLIENT_URI))
-            .catch(() => res.status(400).json({msg: "Error"}))
-        } catch (error) {
-            res.status(403).json({msg: error})
-        }
-    } else {
-        res.status(403).json({msg: "No user signed"})
-    }
+        User.findById(tokenUser._id)
+        .then((user) => {
+            try {
+                if(valid.test(req.body.text) == false)  {
+                    throw "Text can't be empy"
+                }             
+                new Post({user: {id: user._id, name: user.name, avatar : user.avatar ? user.avatar : undefined}, text: req.body.text}).save()
+                .then(() => res.json({msg: "Post created"}))
+                .catch(() => res.status(400).json({msg: "Error"}))
+            } catch (error) {
+                res.status(403).json({msg: error})
+            }
+        })
+        .catch((err) => {
+            res.status(404).json({msg: "Invalid user ID"})
+         })
+    // } else {
+    //     res.status(403).json({msg: "No user signed"})
+    // }
 }
 
 const get_one = (req, res) => {
     const id = req.params.id;
-    if(req.user) {
+    // if(req.user) {
         getSortedPost(id)
         .then((post) => res.json(post))
         .catch((msg) => res.status(404).json(msg))
-    } else {
-        res.status(403).json({msg: "No user signed"})
-    }
+    // } else {
+    //     res.status(403).json({msg: "No user signed"})
+    // }
 }
 
 const update_post = (req, res) => {
     const postId = req.params.id;
-    if(req.user) {
+    // if(req.user) {
+        const user = jwt.decode(req.token, process.env.SECRET_KEY).user;
         const valid = new RegExp(/\S/);
         try {
-        Post.findById(id)
+        Post.findById(postId)
         .then((post) => {
-            if(req.user._id != post.user.id) {
+            if(user._id != post.user.id) {
                 throw "Access denied"                
             } 
             })
@@ -140,22 +152,24 @@ const update_post = (req, res) => {
             Post.findByIdAndUpdate(postId, {$set: {
                 text: req.body.text
             }})
-            .then(() => res.redirect(process.env.CLIENT_URI))
+            .then(() => res.json({msg: "Post updated"}))
             .catch(() => res.status(400).json({msg: "Error"}))
         } catch (error) {
+            console.log(error)
             res.status(403).json({msg: error})
         }
-    } else {
-        res.status(403).json({msg: "No user signed"})
-    }
+    // } else {
+    //     res.status(403).json({msg: "No user signed"})
+    // }
 }
 
 const delete_post = (req, res) => {
     const id = req.params.id;
-    if(req.user) {
+    // if(user) {
+        const user = jwt.decode(req.token, process.env.SECRET_KEY).user;
         Post.findById(id)
         .then((post) => {
-           if(req.user._id == post.user.id) {
+           if(user._id == post.user.id) {
                 Post.findByIdAndDelete(id)
                 .then(() => res.status(200).json({msg: "Post deleted"}))
                 .catch((err) => res.status(400).json({msg: err}))
@@ -166,9 +180,9 @@ const delete_post = (req, res) => {
         .catch((err) => {
             res.status(404).json({msg: "Invalid post ID"})
         })
-    } else {
-        res.status(403).json({msg: "No user signed"})
-    }
+    // } else {
+    //     res.status(403).json({msg: "No user signed"})
+    // }
 }
 
 
