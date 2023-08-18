@@ -39,7 +39,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 app.use(cors({
-  origin: "https://george-al3xander.github.io"  ,
+  origin: process.env.CLIENT_URI,  
   credentials: true,
 }))
 

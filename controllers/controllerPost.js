@@ -109,7 +109,7 @@ const create_post = (req , res) => {
                     throw "Text can't be empy"
                 }             
                 new Post({user: {id: user._id, name: user.name, avatar : user.avatar ? user.avatar : undefined}, text: req.body.text}).save()
-                .then(() => res.json({msg: "Post created"}))
+                .then(() => res.redirect(process.env.CLIENT_URI))
                 .catch(() => res.status(400).json({msg: "Error"}))
             } catch (error) {
                 res.status(403).json({msg: error})
@@ -152,7 +152,7 @@ const update_post = (req, res) => {
             Post.findByIdAndUpdate(postId, {$set: {
                 text: req.body.text
             }})
-            .then(() => res.json({msg: "Post updated"}))
+            .then(() =>res.redirect(process.env.CLIENT_URI))
             .catch(() => res.status(400).json({msg: "Error"}))
         } catch (error) {
             console.log(error)
