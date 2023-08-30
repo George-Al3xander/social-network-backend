@@ -33,25 +33,17 @@ const user_search = (req, res) => {
                 res.status(400).json({msg: "Something went wrong"})
             }
         })
-        .catch(() => res.status(400).json({msg: "Something went wrong"}))
-    // } else {
-    //     res.status(403).json({msg: "No user signed"})
-    // }    
+        .catch(() => res.status(400).json({msg: "Something went wrong"}))       
 }
 
 const user_edit = (req, res) => {    
     const emailValid = new RegExp(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/);
     const passwordValid = new RegExp("^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})");
     const valid = new RegExp(/\S/);
-    const tokenUser = jwt.decode(req.token, process.env.SECRET_KEY).user; 
-    // if(req.user) {
+    const tokenUser = jwt.decode(req.token, process.env.SECRET_KEY).user;   
         try {
             User.findById(tokenUser._id)
-            .then(async (user) => {                
-                //if(await bcrypt.compare(req.body.password, user.password)) {   
-                    // if(req.body.password && !passwordValid.test(req.body.password)) {
-                    //     throw
-                    // }
+            .then(async (user) => {  
                     if(req.body.email && !emailValid.test(req.body.email)) {
                         throw "Invalid email"
                     }
@@ -64,6 +56,10 @@ const user_edit = (req, res) => {
                         }
                     }
                     let updateObj = req.body;
+                    
+                    if(req.body.avatar == false && user.avatar) {
+                       updateObj = {...updateObj, avatar: ""}                        
+                    }                  
                     delete updateObj.password
                     
                     User.findByIdAndUpdate(user._id, {
@@ -90,18 +86,12 @@ const user_edit = (req, res) => {
                             })
                         .catch(() => res.status(400).json({msg: "Error"}))
                 })
-                .catch(() => res.status(400).json({msg: "Error"}))
-                // } else {
-                //     res.status(401).json({msg: "Incorrect password"})
-                // }
+                .catch(() => res.status(400).json({msg: "Error"}))               
             })
             
        } catch (error) {
             res.status(401).json({msg: error})
-       }        
-    // } else {
-    //     res.status(403).json({msg: "No user signed"})
-    // }
+       }   
 
 }
 
